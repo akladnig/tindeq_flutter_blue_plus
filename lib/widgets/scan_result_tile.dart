@@ -2,40 +2,22 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_blue_plus_example/models/ble_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ScanResultTile extends StatefulWidget {
+class ScanResultTile extends ConsumerStatefulWidget {
   const ScanResultTile({super.key, required this.result, this.onTap});
 
   final ScanResult result;
   final VoidCallback? onTap;
 
   @override
-  State<ScanResultTile> createState() => _ScanResultTileState();
+  ConsumerState<ScanResultTile> createState() => _ScanResultTileState();
 }
 
-class _ScanResultTileState extends State<ScanResultTile> {
+class _ScanResultTileState extends ConsumerState<ScanResultTile> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.disconnected;
-
-  late StreamSubscription<BluetoothConnectionState>
-      _connectionStateSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _connectionStateSubscription =
-        widget.result.device.connectionState.listen((state) {
-      _connectionState = state;
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _connectionStateSubscription.cancel();
-    super.dispose();
-  }
 
   String getNiceHexArray(List<int> bytes) {
     return '[${bytes.map((i) => i.toRadixString(16).padLeft(2, '0')).join(', ')}]';
@@ -130,6 +112,17 @@ class _ScanResultTileState extends State<ScanResultTile> {
 
   @override
   Widget build(BuildContext context) {
+    // TODO error and loasing state
+    final _connectionStateAsyncValue =
+        ref.watch(connectionStateProvider(widget.result.device));
+    switch (_connectionStateAsyncValue) {
+      case AsyncData(:final value):
+        _connectionState = value;
+      case AsyncError(:final error):
+        Text('Error: $error');
+      case _:
+        const CircularProgressIndicator();
+    }
     var adv = widget.result.advertisementData;
     return ExpansionTile(
       title: _buildTitle(context),
