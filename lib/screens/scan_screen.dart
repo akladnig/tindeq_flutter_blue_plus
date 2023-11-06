@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'device_screen.dart';
 import '../utils/snackbar.dart';
-import '../widgets/connected_device_tile.dart';
 import '../widgets/scan_result_tile.dart';
 import '../utils/extra.dart';
 
@@ -20,7 +19,6 @@ class ScanScreen extends ConsumerStatefulWidget {
 
 class _ScanScreenState extends ConsumerState<ScanScreen> {
   bool _isScanning = false;
-  List<BluetoothDevice> _connectedDevices = [];
   List<ScanResult> _scanResults = [];
 
   Future onScanPressed() async {
@@ -91,14 +89,11 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     final _scanResultsAsyncValue = ref.watch(scanResultsProvider);
     BluetoothDevice tindeqDevice;
     switch (_scanResultsAsyncValue) {
-      case AsyncValue(:final error?):
-        Text('Error: $error');
-      case AsyncValue(:var value?):
-        if (_scanResultsAsyncValue.value!.isNotEmpty) {
-          if (_scanResultsAsyncValue.value![0].device.platformName
-              .contains('Progressor')) {
-            tindeqDevice = _scanResultsAsyncValue.value![0].device;
-            _scanResults = _scanResultsAsyncValue.value!;
+      case AsyncData(:var value):
+        if (value.isNotEmpty) {
+          if (value[0].device.platformName.contains('Progressor')) {
+            tindeqDevice = value[0].device;
+            _scanResults = value;
             // Stop scanning if the Tindeq is found
             ref.watch(stopScanProvider);
             // Connect to the Tindeq
@@ -107,6 +102,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 'scanResult: ${_scanResults.length} ${_scanResults[0].device}');
           }
         }
+      case AsyncError(:final error):
+        Text('Error: $error');
       case _:
         const CircularProgressIndicator();
     }
