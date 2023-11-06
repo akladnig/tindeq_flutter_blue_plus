@@ -13,8 +13,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'screens/bluetooth_off_screen.dart';
 import 'screens/scan_screen.dart';
 
-// part 'main.g.dart';
-
 void main() {
   runApp(
     ProviderScope(
@@ -128,12 +126,12 @@ class _FlutterBlueAppStateState extends ConsumerState<FlutterBlueApp> {
         BluetoothOffScreen(adapterState: BluetoothAdapterState.unknown);
     // TODO update to AsyncValueWidget
     switch (adapterState) {
-      case AsyncValue(:final error?):
-        Text('Error: $error');
-      case AsyncValue(:var value?):
-        screen = adapterState.value == BluetoothAdapterState.on
+      case AsyncData(:var value):
+        screen = value == BluetoothAdapterState.on
             ? const ScanScreen()
-            : BluetoothOffScreen(adapterState: adapterState.value);
+            : BluetoothOffScreen(adapterState: value);
+      case AsyncError(:final error):
+        Text('Error: $error');
       case _:
         const CircularProgressIndicator();
     }
