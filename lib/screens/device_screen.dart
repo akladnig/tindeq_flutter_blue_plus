@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_blue_plus_example/models/ble_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../widgets/service_tile.dart';
 import '../widgets/characteristic_tile.dart';
@@ -9,17 +11,16 @@ import '../widgets/descriptor_tile.dart';
 import '../utils/snackbar.dart';
 import '../utils/extra.dart';
 
-class DeviceScreen extends StatefulWidget {
+class DeviceScreen extends ConsumerStatefulWidget {
   final BluetoothDevice device;
 
-  const DeviceScreen({Key? key, required this.device}) : super(key: key);
+  const DeviceScreen({super.key, required this.device});
 
   @override
-  State<DeviceScreen> createState() => _DeviceScreenState();
+  ConsumerState<ConsumerStatefulWidget> createState() => _DeviceScreenState();
 }
 
-class _DeviceScreenState extends State<DeviceScreen> {
-  int? _rssi;
+class _DeviceScreenState extends ConsumerState<DeviceScreen> {
   BluetoothConnectionState _connectionState =
       BluetoothConnectionState.disconnected;
   List<BluetoothService> _services = [];
@@ -40,10 +41,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
       if (state == BluetoothConnectionState.connected) {
         _services = []; // must rediscover services
       }
-      if (state == BluetoothConnectionState.connected && _rssi == null) {
-        _rssi = await widget.device.readRssi();
-      }
-      setState(() {});
     });
 
     _isConnectingOrDisconnectingSubscription =
@@ -153,14 +150,14 @@ class _DeviceScreenState extends State<DeviceScreen> {
     );
   }
 
-  Widget buildRssiTile(BuildContext context) {
+  Widget buildRssiTile(BuildContext context, int? rssi) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         isConnected
             ? const Icon(Icons.bluetooth_connected)
             : const Icon(Icons.bluetooth_disabled),
-        Text(((isConnected && _rssi != null) ? '${_rssi!} dBm' : ''),
+        Text(((isConnected && rssi != null) ? '${rssi} dBm' : ''),
             style: Theme.of(context).textTheme.bodySmall)
       ],
     );
@@ -198,6 +195,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    int? _rssi = ref.watch(readRssiProvider(widget.device)).valueOrNull;
     return ScaffoldMessenger(
       key: Snackbar.snackBarKeyC,
       child: Scaffold(
@@ -210,7 +208,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
             children: <Widget>[
               buildRemoteId(context),
               ListTile(
-                leading: buildRssiTile(context),
+                leading: buildRssiTile(context, _rssi),
                 title: Text(
                     'Device is ${_connectionState.toString().split('.')[1]}.'),
                 trailing: buildGetServices(context),
