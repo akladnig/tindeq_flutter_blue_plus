@@ -40,6 +40,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   }
 
   void onConnectPressed(BluetoothDevice device) {
+    //TODO riverpod
     device.connectAndUpdateStream().catchError((e) {
       Snackbar.show(ABC.c, prettyException("Connect Error:", e),
           success: false);
