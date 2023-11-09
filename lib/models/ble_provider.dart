@@ -26,7 +26,8 @@ Stream<bool> isScanning(IsScanningRef) {
 @riverpod
 Future<void> startScan(StartScanRef ref) {
   return FlutterBluePlus.startScan(
-      oneByOne: true, timeout: const Duration(seconds: 15));
+      // oneByOne: true, timeout: const Duration(seconds: 15));
+      oneByOne: true);
 }
 
 @riverpod
@@ -46,9 +47,17 @@ Stream<BluetoothConnectionState> connectionState(
 }
 
 @riverpod
-Future<List<BluetoothService>> discoverServices(
-    DiscoverServicesRef ref, BluetoothDevice device) {
-  var connectionState = ref.watch(connectionStateProvider(device));
-
-  return device.discoverServices();
+Future<int> readRssi(ReadRssiRef ref, BluetoothDevice device) {
+  return device.readRssi();
 }
+
+
+// @riverpod
+// Future<List<BluetoothService>> discoverServices(
+//     DiscoverServicesRef ref, BluetoothDevice device) {
+//   var connectionState = ref.watch(connectionStateProvider(device));
+
+//   return connectionState == BluetoothConnectionState.connected
+//       ? device.discoverServices()
+//       : null;
+// }
